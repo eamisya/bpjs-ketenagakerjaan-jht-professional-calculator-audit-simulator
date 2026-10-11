@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPJS Ketenagakerjaan JHT Audit & Actuarial Simulator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        },
+                        navy: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+        }
+        .code-math {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <header class="bg-navy-950 text-white border-b border-slate-800 sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white font-black text-xl">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-lg tracking-tight text-white">JHT Audit Engine</span>
+                        <span class="px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full">Actuarial Grade v2.4</span>
+                    </div>
+                    <p class="text-xs text-slate-400">BPJS Ketenagakerjaan Saldo & Hasil Pengembangan Simulation Suite</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2.5">
+                <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-slate-300 bg-slate-900 border border-slate-800 rounded-lg">
+                    <i data-lucide="book-open" class="w-3.5 h-3.5 text-emerald-400"></i>
+                    PP 46/2015 jo. PP 60/2015
+                </span>
+                <button onclick="resetDefaults()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 border border-slate-700 rounded-lg transition-all">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                    Reset Nilai Default
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1 space-y-8">
+
+        <!-- Top Overview & Regulatory Banner -->
+        <div class="bg-gradient-to-r from-emerald-900 via-slate-900 to-navy-950 p-6 rounded-2xl border border-emerald-800/30 shadow-sm text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 text-[11px] font-bold tracking-wide uppercase bg-emerald-500 text-slate-950 rounded">Audit & Compliance Tool</span>
+                    <span class="text-xs text-slate-400">Untuk HR Manager, Akuntan, & Penilai Aktuaria</span>
+                </div>
+                <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Simulator Validasi & Verifikasi Saldo JHT</h1>
+                <p class="text-sm text-slate-300 max-w-3xl">
+                    Verifikasi saldo akumulatif JHT karyawan dengan compound interest bulanan presisi, eskalasi upah berkala, dan verifikasi rasio porsi pemberi kerja (3,7%) dan pekerja (2,0%).
+                </p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <button onclick="window.scrollTo({top: document.getElementById('formulaSection').offsetTop - 80, behavior: 'smooth'})" class="px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+                    <i data-lucide="file-code-2" class="w-4 h-4"></i> Rumus Regulasi
+                </button>
+                <button onclick="exportToCSV()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 transition">
+                    <i data-lucide="download" class="w-4 h-4"></i> Export CSV Audit
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- Left: Input Control Column (4 Cols) -->
+            <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="sliders-horizontal" class="w-4 h-4 text-emerald-600"></i>
+                        Parameter Perhitungan
+                    </h2>
+                    <span class="text-xs text-slate-400">Real-time update</span>
+                </div>
+
+                <div class="space-y-4 text-sm">
+                    <!-- Upah Bulanan Pokok -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Upah Pokok + Tunjangan Tetap</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">Rp</span>
+                            <input type="number" id="inputWage" value="12000000" step="500000" min="0" oninput="calculateJHT()"
+                                class="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1">Dasar perhitungan iuran bulanan.</p>
+                    </div>
+
+                    <!-- Saldo Awal Existing -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Saldo Awal Terbawa (Existing)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">Rp</span>
+                            <input type="number" id="inputInitialBalance" value="25000000" step="1000000" min="0" oninput="calculateJHT()"
+                                class="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+                        </div>
+                    </div>
+
+                    <!-- Tenur / Durasi -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Masa Kerja (Tahun)</label>
+                            <input type="number" id="inputYears" value="10" min="1" max="45" oninput="calculateJHT()"
+                                class="w-full px-3 py-2 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Kenaikan Upah (%/thn)</label>
+                            <div class="relative">
+                                <input type="number" id="inputWageGrowth" value="5.0" step="0.5" min="0" oninput="calculateJHT()"
+                                    class="w-full px-3 py-2 border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+                                <span class="absolute right-3 top-2 text-slate-400 text-xs font-bold">%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estimasi Hasil Pengembangan (Bunga) -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-semibold text-slate-600 uppercase">Hasil Pengembangan Tahunan</label>
+                            <span id="labelYield" class="text-xs font-bold text-emerald-600">5.70% p.a.</span>
+                        </div>
+                        <input type="range" id="inputYieldRate" min="2.0" max="10.0" step="0.1" value="5.7" oninput="syncYieldDisplay(); calculateJHT()"
+                            class="w-full accent-emerald-600 cursor-pointer">
+                        <div class="flex justify-between text-[10px] text-slate-400">
+                            <span>2.0% (Konservatif)</span>
+                            <span>5.7% (Historis Avg)</span>
+                            <span>10.0% (Agresif)</span>
+                        </div>
+                    </div>
+
+                    <!-- Breakdown Split Iuran -->
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/70 space-y-2.5">
+                        <span class="text-xs font-bold text-slate-700 block">Proporsi Iuran (Statutory: 5,7%)</span>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <label class="text-slate-500 block mb-0.5">Perusahaan</label>
+                                <div class="flex items-center">
+                                    <input type="number" id="inputEmployerRate" value="3.7" step="0.1" min="0" oninput="updateTotalRate(); calculateJHT()"
+                                        class="w-full p-1.5 border border-slate-300 rounded-lg text-xs font-medium focus:ring-1 focus:ring-emerald-500">
+                                    <span class="ml-1 text-slate-500">%</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-slate-500 block mb-0.5">Karyawan</label>
+                                <div class="flex items-center">
+                                    <input type="number" id="inputEmployeeRate" value="2.0" step="0.1" min="0" oninput="updateTotalRate(); calculateJHT()"
+                                        class="w-full p-1.5 border border-slate-300 rounded-lg text-xs font-medium focus:ring-1 focus:ring-emerald-500">
+                                    <span class="ml-1 text-slate-500">%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between text-[11px] font-semibold text-slate-600 pt-1 border-t border-slate-200">
+                            <span>Total Akumulasi Iuran:</span>
+                            <span id="labelTotalRate" class="text-emerald-700 font-bold">5.70%</span>
+                        </div>
+                    </div>
+
+                    <!-- Deposit Timing Convention -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Konvensi Setoran Iuran</label>
+                        <select id="inputDepositTiming" onchange="calculateJHT()"
+                            class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-emerald-500 bg-white">
+                            <option value="start">Awal Bulan (Bunga Penuh Bulan Berjalan)</option>
+                            <option value="mid" selected>Tengah Bulan (Prorata d/D = 15/30 Hari)</option>
+                            <option value="end">Akhir Bulan (Bunga Mulai Bulan Berikutnya)</option>
+                        </select>
+                        <p class="text-[11px] text-slate-400 mt-1">Mengatur faktor pembobotan prorasional d/D bunga iuran baru.</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="lg:col-span-8 space-y-6">
+                <!-- Metrics Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                    
+                    <!-- KPI 1: Saldo Akhir Proyeksi -->
+                    <div class="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl p-4 text-white shadow-md shadow-emerald-900/10 flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs uppercase tracking-wider text-emerald-100 font-semibold">Proyeksi Saldo Akhir</span>
+                            <span class="p-1.5 bg-white/10 rounded-lg"><i data-lucide="wallet" class="w-4 h-4"></i></span>
+                        </div>
+                        <div class="my-3">
+                            <h3 id="statTotalBalance" class="text-2xl font-black tracking-tight">Rp 0</h3>
+                            <p id="statMonthsCount" class="text-[11px] text-emerald-100/90 mt-0.5">Setelah 120 bulan akumulasi</p>
+                        </div>
+                        <div class="text-[10px] bg-black/15 -mx-4 -mb-4 p-2.5 rounded-b-2xl flex items-center justify-between">
+                            <span>Multiplier Pokok:</span>
+                            <span id="statMultiplier" class="font-bold text-emerald-200">1.00x</span>
+                        </div>
+                    </div>
+
+                    <!-- KPI 2: Total Iuran (Principal) -->
+                    <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Total Iuran Bersih</span>
+                            <span class="p-1.5 bg-slate-100 rounded-lg text-slate-700"><i data-lucide="piggy-bank" class="w-4 h-4"></i></span>
+                        </div>
+                        <div class="my-3">
+                            <h3 id="statTotalDeposits" class="text-xl font-extrabold text-slate-900 tracking-tight">Rp 0</h3>
+                            <p class="text-[11px] text-slate-500 mt-0.5">Pokok disetor (5,7%)</p>
+                        </div>
+                        <div class="text-[10px] text-slate-500 bg-slate-50 -mx-4 -mb-4 p-2.5 rounded-b-2xl flex items-center justify-between border-t border-slate-100">
+                            <span>Termasuk Saldo Awal</span>
+                            <span id="statInitialIncluded" class="font-medium text-slate-700">Rp 0</span>
+                        </div>
+                    </div>
+
+                    <!-- KPI 3: Total Hasil Pengembangan (Compound Yield) -->
+                    <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Akumulasi Bunga</span>
+                            <span class="p-1.5 bg-emerald-50 rounded-lg text-emerald-600"><i data-lucide="trending-up" class="w-4 h-4"></i></span>
+                        </div>
+                        <div class="my-3">
+                            <h3 id="statTotalInterest" class="text-xl font-extrabold text-emerald-700 tracking-tight">Rp 0</h3>
+                            <p id="statInterestRatio" class="text-[11px] text-slate-500 mt-0.5">0% dari total saldo akhir</p>
+                        </div>
+                        <div class="text-[10px] text-slate-500 bg-slate-50 -mx-4 -mb-4 p-2.5 rounded-b-2xl flex items-center justify-between border-t border-slate-100">
+                            <span>Suku Bunga Efektif/Bln:</span>
+                            <span id="statMonthlyRate" class="font-mono text-slate-700 font-semibold">0.475%</span>
+                        </div>
+                    </div>
+
+                    <!-- KPI 4: Beban Perusahaan vs Pekerja -->
+                    <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Split Iuran Setoran</span>
+                            <span class="p-1.5 bg-slate-100 rounded-lg text-slate-700"><i data-lucide="users" class="w-4 h-4"></i></span>
+                        </div>
+                        <div class="my-2 space-y-1">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-slate-500">Pemberi Kerja:</span>
+                                <span id="statEmployerContrib" class="font-bold text-slate-800">Rp 0</span>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span class="text-slate-500">Pekerja (2%):</span>
+                                <span id="statEmployeeContrib" class="font-bold text-slate-800">Rp 0</span>
+                            </div>
+                        </div>
+                        <div class="text-[10px] text-slate-500 bg-slate-50 -mx-4 -mb-4 p-2 rounded-b-2xl text-center border-t border-slate-100">
+                            Rasio 3.7 : 2.0 Sesuai Regulasi
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <i data-lucide="line-chart" class="w-4 h-4 text-emerald-600"></i>
+                                Kurva Pertumbuhan Saldo: Pokok vs. Bunga Majemuk
+                            </h3>
+                            <p class="text-xs text-slate-400">Visualisasi efek compounding tahunan terhadap simpanan masa tua</p>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="inline-flex items-center gap-1.5">
+                                <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                                <span class="text-slate-600 font-medium">Bunga Pengembangan</span>
+                            </span>
+                            <span class="inline-flex items-center gap-1.5">
+                                <span class="w-3 h-3 rounded-full bg-slate-700 inline-block"></span>
+                                <span class="text-slate-600 font-medium">Pokok Iuran</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="relative h-72 w-full">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="table-2" class="w-5 h-5 text-emerald-600"></i>
+                        Tabel Audit Jadwal Amortisasi & Akumulasi JHT
+                    </h3>
+                    <p class="text-xs text-slate-400">Rincian matematis per periode untuk audit rekapitulasi slip gaji & mutasi BPJSTK</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex items-center border border-slate-200 rounded-xl overflow-hidden p-0.5 bg-slate-50 text-xs font-semibold">
+                        <button id="viewModeAnnual" onclick="setTableViewMode('annual')" class="px-3 py-1.5 rounded-lg bg-white shadow-sm text-slate-900 transition">Ringkasan Tahunan</button>
+                        <button id="viewModeMonthly" onclick="setTableViewMode('monthly')" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 transition">Bulanan Lengkap</button>
+                    </div>
+                    <button onclick="exportToCSV()" class="px-3.5 py-1.5 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white rounded-xl inline-flex items-center gap-1.5 transition">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        CSV Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto max-h-[440px] relative">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead class="bg-slate-50/90 backdrop-blur sticky top-0 z-10 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                        <tr>
+                            <th class="p-3 pl-5">Periode</th>
+                            <th class="p-3 text-right">Upah Terlapor</th>
+                            <th class="p-3 text-right">Iuran Perusahaan (3.7%)</th>
+                            <th class="p-3 text-right">Iuran Karyawan (2.0%)</th>
+                            <th class="p-3 text-right">Total Iuran Baru</th>
+                            <th class="p-3 text-right">Saldo Awal Bulan</th>
+                            <th class="p-3 text-right text-emerald-700">Hasil Pengembangan</th>
+                            <th class="p-3 pr-5 text-right font-black text-slate-900">Saldo Akhir</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditTableBody" class="divide-y divide-slate-100 font-mono text-slate-700">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="p-3 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-500">
+                <span id="tableRowsInfo">Menampilkan data simulasi</span>
+                <span class="text-[11px] text-slate-400">Pembulatan angka nominal ke bilangan bulat terdekat (IDR)</span>
+            </div>
+        </section>
+
+        <section id="formulaSection" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+            <div class="border-b border-slate-100 pb-3">
+                <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="file-check" class="w-5 h-5 text-emerald-600"></i>
+                    Kerangka Hukum & Formulasi Matematis BPJS Ketenagakerjaan
+                </h3>
+                <p class="text-xs text-slate-400">Rujukan regulasi PP No. 46 Tahun 2015 dan PP No. 60 Tahun 2015 tentang Penyelenggaraan JHT</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Formula 1 -->
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200/70 space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-5 h-5 rounded-full bg-emerald-600 text-white text-[11px] font-bold flex items-center justify-center">1</span>
+                        <h4 class="text-xs font-bold uppercase text-slate-800">Formula Akumulasi Saldo Bulanan</h4>
+                    </div>
+                    <div class="bg-white p-3 rounded-lg border border-slate-200 code-math text-xs text-slate-900 font-semibold overflow-x-auto">
+                        S(t) = S(t-1) + H(t) + I(t)
+                    </div>
+                    <ul class="text-[11px] text-slate-600 space-y-1 list-disc pl-4">
+                        <li><strong>S(t)</strong>: Saldo akhir JHT pada akhir bulan ke-t.</li>
+                        <li><strong>S(t-1)</strong>: Saldo penutupan bulan sebelumnya.</li>
+                        <li><strong>H(t)</strong>: Hasil pengembangan (bunga) yang didistribusikan pada bulan ke-t.</li>
+                        <li><strong>I(t)</strong>: Setoran iuran JHT bulan berjalan (Total 5,7% upah).</li>
+                    </ul>
+                </div>
+
+                <!-- Formula 2 -->
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200/70 space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-5 h-5 rounded-full bg-emerald-600 text-white text-[11px] font-bold flex items-center justify-center">2</span>
+                        <h4 class="text-xs font-bold uppercase text-slate-800">Hasil Pengembangan & Prorata Hari</h4>
+                    </div>
+                    <div class="bg-white p-3 rounded-lg border border-slate-200 code-math text-xs text-slate-900 font-semibold overflow-x-auto">
+                        H(t) = [S(t-1) &times; r_m] + [I(t) &times; r_m &times; (d / D)]
+                    </div>
+                    <ul class="text-[11px] text-slate-600 space-y-1 list-disc pl-4">
+                        <li><strong>r_m</strong>: Suku bunga bulanan efektif = <em>r_tahunan / 12</em>.</li>
+                        <li><strong>d / D</strong>: Faktor bobot hari mengendap iuran baru terhadap jumlah hari bulan kalender.</li>
+                        <li><em>Default BPJS</em>: Suku bunga tidak boleh lebih rendah dari rata-rata bunga deposito bank pemerintah 1 tahun.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Auditor & Actuarial Notice -->
+            <div class="p-4 bg-amber-50/70 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1.5">
+                <div class="flex items-center gap-1.5 font-bold">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600"></i>
+                    Catatan Kepatuhan & Verifikasi Auditor Independen
+                </div>
+                <p class="text-[11px] text-amber-800 leading-relaxed">
+                    Aplikasi ini ditujukan untuk initial checking dan audit rekonsiliasi cadangan imbalan pasca-kerja (PSAK 24/IAS 19 / PP 35/2021). Hasil aktual BPJS Ketenagakerjaan dapat memiliki deviasi minor karena tanggal efektif pencatatan iuran oleh bank kustodian (*clearing cut-off*), fluktuasi floating yield tahunan yang disahkan BPJSTK setiap awal kuartal, serta kebijakan pembulatan sen.
+                </p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 text-xs py-6 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+            <div>
+                <p class="font-semibold text-slate-200">BPJS Ketenagakerjaan JHT Professional Financial Simulator</p>
+                <p class="text-[11px] text-slate-500">Mendukung standardisasi perhitungan kompensasi ketenagakerjaan Indonesia.</p>
+            </div>
+            <div class="flex items-center gap-4 text-[11px]">
+                <span class="inline-flex items-center gap-1 text-slate-400">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400"></i> Siap Pakai untuk HR & Payroll Audit
+                </span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Global Calculation & Chart State
+        let growthChartInstance = null;
+        let auditScheduleCache = [];
+        let currentTableViewMode = 'annual'; // 'annual' or 'monthly'
+
+        // Utility: Format currency to IDR
+        function formatIDR(value) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                maximumFractionDigits: 0
+            }).format(value);
+        }
+
+        // Utility: Format integer
+        function formatNumber(value) {
+            return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(value);
+        }
+
+        // Sync Yield Slider Label
+        function syncYieldDisplay() {
+            const val = parseFloat(document.getElementById('inputYieldRate').value);
+            document.getElementById('labelYield').innerText = `${val.toFixed(2)}% p.a.`;
+        }
+
+        // Update Total Contribution Rate
+        function updateTotalRate() {
+            const empRate = parseFloat(document.getElementById('inputEmployerRate').value) || 0;
+            const staffRate = parseFloat(document.getElementById('inputEmployeeRate').value) || 0;
+            const total = (empRate + staffRate).toFixed(2);
+            document.getElementById('labelTotalRate').innerText = `${total}%`;
+        }
+
+        // Reset to default statutory standard
+        function resetDefaults() {
+            document.getElementById('inputWage').value = 12000000;
+            document.getElementById('inputInitialBalance').value = 25000000;
+            document.getElementById('inputYears').value = 10;
+            document.getElementById('inputWageGrowth').value = 5.0;
+            document.getElementById('inputYieldRate').value = 5.7;
+            document.getElementById('inputEmployerRate').value = 3.7;
+            document.getElementById('inputEmployeeRate').value = 2.0;
+            document.getElementById('inputDepositTiming').value = 'mid';
+            syncYieldDisplay();
+            updateTotalRate();
+            calculateJHT();
+        }
+
+        // Table View Mode Switcher
+        function setTableViewMode(mode) {
+            currentTableViewMode = mode;
+            const btnAnnual = document.getElementById('viewModeAnnual');
+            const btnMonthly = document.getElementById('viewModeMonthly');
+            
+            if (mode === 'annual') {
+                btnAnnual.className = "px-3 py-1.5 rounded-lg bg-white shadow-sm text-slate-900 transition";
+                btnMonthly.className = "px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 transition";
+            } else {
+                btnMonthly.className = "px-3 py-1.5 rounded-lg bg-white shadow-sm text-slate-900 transition";
+                btnAnnual.className = "px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 transition";
+            }
+            renderTable();
+        }
+
+        // Core Calculation Engine
+        function calculateJHT() {
+            const initialWage = parseFloat(document.getElementById('inputWage').value) || 0;
+            const initialBalance = parseFloat(document.getElementById('inputInitialBalance').value) || 0;
+            const years = parseInt(document.getElementById('inputYears').value) || 1;
+            const annualWageGrowth = (parseFloat(document.getElementById('inputWageGrowth').value) || 0) / 100;
+            const annualYieldRate = (parseFloat(document.getElementById('inputYieldRate').value) || 0) / 100;
+            const employerRate = (parseFloat(document.getElementById('inputEmployerRate').value) || 0) / 100;
+            const employeeRate = (parseFloat(document.getElementById('inputEmployeeRate').value) || 0) / 100;
+            const timing = document.getElementById('inputDepositTiming').value;
+
+            // Monthly interest rate
+            const monthlyYieldRate = annualYieldRate / 12;
+
+            // Determine deposit proration factor d / D
+            let prorationFactor = 0.5; // Mid month default
+            if (timing === 'start') prorationFactor = 1.0;
+            if (timing === 'end') prorationFactor = 0.0;
+
+            const totalMonths = years * 12;
+            let currentBalance = initialBalance;
+            let currentWage = initialWage;
+
+            let totalEmployerContribution = 0;
+            let totalEmployeeContribution = 0;
+            let totalInterestAccumulated = 0;
+
+            auditScheduleCache = [];
+
+            // Yearly Tracking for Chart and Annual Table
+            const yearlyData = [];
+            let yearlyEmployerContrib = 0;
+            let yearlyEmployeeContrib = 0;
+            let yearlyInterest = 0;
+
+            for (let month = 1; month <= totalMonths; month++) {
+                // Adjust wage every 12 months (starting year 2)
+                if (month > 1 && (month - 1) % 12 === 0) {
+                    currentWage = currentWage * (1 + annualWageGrowth);
+                }
+
+                const currentYear = Math.ceil(month / 12);
+                const monthInYear = ((month - 1) % 12) + 1;
+
+                const employerContrib = currentWage * employerRate;
+                const employeeContrib = currentWage * employeeRate;
+                const monthlyTotalContrib = employerContrib + employeeContrib;
+
+                // Hasil Pengembangan Bulanan H(t)
+                const interestOnExisting = currentBalance * monthlyYieldRate;
+                const interestOnNewDeposit = monthlyTotalContrib * monthlyYieldRate * prorationFactor;
+                const monthlyInterest = interestOnExisting + interestOnNewDeposit;
+
+                const balanceBefore = currentBalance;
+                const balanceAfter = balanceBefore + monthlyInterest + monthlyTotalContrib;
+
+                // Update Accumulators
+                totalEmployerContribution += employerContrib;
+                totalEmployeeContribution += employeeContrib;
+                totalInterestAccumulated += monthlyInterest;
+                currentBalance = balanceAfter;
+
+                // Store monthly record
+                auditScheduleCache.push({
+                    month: month,
+                    year: currentYear,
+                    monthInYear: monthInYear,
+                    wage: currentWage,
+                    employerContrib: employerContrib,
+                    employeeContrib: employeeContrib,
+                    totalContrib: monthlyTotalContrib,
+                    balanceBefore: balanceBefore,
+                    interest: monthlyInterest,
+                    balanceAfter: balanceAfter
+                });
+
+                // Accumulate yearly sums
+                yearlyEmployerContrib += employerContrib;
+                yearlyEmployeeContrib += employeeContrib;
+                yearlyInterest += monthlyInterest;
+
+                // At end of each year or final month
+                if (month % 12 === 0 || month === totalMonths) {
+                    yearlyData.push({
+                        year: currentYear,
+                        wage: currentWage,
+                        employerContrib: yearlyEmployerContrib,
+                        employeeContrib: yearlyEmployeeContrib,
+                        totalContrib: yearlyEmployerContrib + yearlyEmployeeContrib,
+                        interest: yearlyInterest,
+                        balanceAfter: balanceAfter
+                    });
+                    yearlyEmployerContrib = 0;
+                    yearlyEmployeeContrib = 0;
+                    yearlyInterest = 0;
+                }
+            }
+
+            // Update Metric Cards
+            const grandTotalDeposits = initialBalance + totalEmployerContribution + totalEmployeeContribution;
+            const multiplier = grandTotalDeposits > 0 ? (currentBalance / grandTotalDeposits).toFixed(2) : "1.00";
+            const interestPercentage = currentBalance > 0 ? ((totalInterestAccumulated / currentBalance) * 100).toFixed(1) : 0;
+
+            document.getElementById('statTotalBalance').innerText = formatIDR(currentBalance);
+            document.getElementById('statMonthsCount').innerText = `Setelah ${totalMonths} bulan (${years} tahun) kepesertaan`;
+            document.getElementById('statMultiplier').innerText = `${multiplier}x Total Pokok`;
+
+            document.getElementById('statTotalDeposits').innerText = formatIDR(grandTotalDeposits);
+            document.getElementById('statInitialIncluded').innerText = `Saldo Awal: ${formatIDR(initialBalance)}`;
+
+            document.getElementById('statTotalInterest').innerText = formatIDR(totalInterestAccumulated);
+            document.getElementById('statInterestRatio').innerText = `${interestPercentage}% dari total saldo akhir`;
+            document.getElementById('statMonthlyRate').innerText = `${(monthlyYieldRate * 100).toFixed(4)}% / bln`;
+
+            document.getElementById('statEmployerContrib').innerText = formatIDR(totalEmployerContribution);
+            document.getElementById('statEmployeeContrib').innerText = formatIDR(totalEmployeeContribution);
+
+            // Update Chart & Table
+            updateChart(yearlyData, initialBalance);
+            renderTable();
+        }
+
+        function updateChart(yearlyData, initialBalance) {
+            const ctx = document.getElementById('growthChart').getContext('2d');
+
+            const labels = yearlyData.map(d => `Tahun ${d.year}`);
+            
+            // Cumulative values for stacked area representation
+            let cumulativeDeposits = initialBalance;
+            const depositsLine = [];
+            const balanceLine = [];
+
+            yearlyData.forEach(d => {
+                cumulativeDeposits += d.totalContrib;
+                depositsLine.push(cumulativeDeposits);
+                balanceLine.push(d.balanceAfter);
+            });
+
+            if (growthChartInstance) {
+                growthChartInstance.destroy();
+            }
+
+            growthChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Total Saldo Akumulatif (IDR)',
+                            data: balanceLine,
+                            borderColor: '#059669',
+                            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                            fill: true,
+                            tension: 0.35,
+                            borderWidth: 2.5,
+                            pointRadius: yearlyData.length > 20 ? 1 : 4,
+                            pointBackgroundColor: '#059669'
+                        },
+                        {
+                            label: 'Kumulatif Pokok Iuran + Saldo Awal (IDR)',
+                            data: depositsLine,
+                            borderColor: '#334155',
+                            backgroundColor: 'rgba(51, 65, 85, 0.08)',
+                            fill: true,
+                            tension: 0.35,
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: '#0f172a',
+                            titleFont: { size: 12, weight: 'bold' },
+                            bodyFont: { size: 11 },
+                            padding: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${formatIDR(context.parsed.y)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 10 }, color: '#64748b' }
+                        },
+                        y: {
+                            grid: { color: '#f1f5f9' },
+                            ticks: {
+                                font: { size: 10 },
+                                color: '#64748b',
+                                callback: function(value) {
+                                    if (value >= 1e9) return (value / 1e9).toFixed(1) + ' Miliar';
+                                    if (value >= 1e6) return (value / 1e6).toFixed(0) + ' Juta';
+                                    return value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('auditTableBody');
+            tbody.innerHTML = '';
+
+            const initialBalance = parseFloat(document.getElementById('inputInitialBalance').value) || 0;
+
+            if (currentTableViewMode === 'annual') {
+                // Group by year
+                const yearsMap = {};
+                auditScheduleCache.forEach(row => {
+                    if (!yearsMap[row.year]) {
+                        yearsMap[row.year] = {
+                            year: row.year,
+                            lastWage: row.wage,
+                            startBalance: row.balanceBefore,
+                            employerContrib: 0,
+                            employeeContrib: 0,
+                            totalContrib: 0,
+                            interest: 0,
+                            endBalance: row.balanceAfter
+                        };
+                    }
+                    yearsMap[row.year].employerContrib += row.employerContrib;
+                    yearsMap[row.year].employeeContrib += row.employeeContrib;
+                    yearsMap[row.year].totalContrib += row.totalContrib;
+                    yearsMap[row.year].interest += row.interest;
+                    yearsMap[row.year].endBalance = row.balanceAfter;
+                    yearsMap[row.year].lastWage = row.wage;
+                });
+
+                const rows = Object.values(yearsMap);
+                rows.forEach((r, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.className = idx % 2 === 0 ? 'bg-white hover:bg-slate-50/80 transition' : 'bg-slate-50/40 hover:bg-slate-50 transition';
+                    tr.innerHTML = `
+                        <td class="p-3 pl-5 font-bold text-slate-800">Tahun ${r.year}</td>
+                        <td class="p-3 text-right">${formatNumber(r.lastWage)}</td>
+                        <td class="p-3 text-right text-slate-600">${formatNumber(r.employerContrib)}</td>
+                        <td class="p-3 text-right text-slate-600">${formatNumber(r.employeeContrib)}</td>
+                        <td class="p-3 text-right font-medium text-slate-900">${formatNumber(r.totalContrib)}</td>
+                        <td class="p-3 text-right text-slate-500">${formatNumber(r.startBalance)}</td>
+                        <td class="p-3 text-right font-semibold text-emerald-600">+${formatNumber(r.interest)}</td>
+                        <td class="p-3 pr-5 text-right font-bold text-slate-950">${formatNumber(r.endBalance)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                document.getElementById('tableRowsInfo').innerText = `Menampilkan ${rows.length} tahun ringkasan rekapitulasi.`;
+
+            } else {
+                // Monthly detailed view
+                auditScheduleCache.forEach((r, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.className = idx % 2 === 0 ? 'bg-white hover:bg-slate-50/80 transition' : 'bg-slate-50/40 hover:bg-slate-50 transition';
+                    tr.innerHTML = `
+                        <td class="p-3 pl-5 font-semibold text-slate-700">Thn ${r.year} - Bln ${r.monthInYear} <span class="text-[10px] text-slate-400 font-normal">(#${r.month})</span></td>
+                        <td class="p-3 text-right">${formatNumber(r.wage)}</td>
+                        <td class="p-3 text-right text-slate-600">${formatNumber(r.employerContrib)}</td>
+                        <td class="p-3 text-right text-slate-600">${formatNumber(r.employeeContrib)}</td>
+                        <td class="p-3 text-right font-medium text-slate-900">${formatNumber(r.totalContrib)}</td>
+                        <td class="p-3 text-right text-slate-500">${formatNumber(r.balanceBefore)}</td>
+                        <td class="p-3 text-right font-semibold text-emerald-600">+${formatNumber(r.interest)}</td>
+                        <td class="p-3 pr-5 text-right font-bold text-slate-950">${formatNumber(r.balanceAfter)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                document.getElementById('tableRowsInfo').innerText = `Menampilkan ${auditScheduleCache.length} bulan data terperinci.`;
+            }
+        }
+
+        function exportToCSV() {
+            if (!auditScheduleCache || auditScheduleCache.length === 0) {
+                return;
+            }
+
+            const headers = [
+                "Bulan_Ke",
+                "Tahun_Ke",
+                "Bulan_Dalam_Tahun",
+                "Upah_Terlapor_IDR",
+                "Iuran_Perusahaan_IDR",
+                "Iuran_Karyawan_IDR",
+                "Total_Iuran_Baru_IDR",
+                "Saldo_Awal_IDR",
+                "Hasil_Pengembangan_IDR",
+                "Saldo_Akhir_IDR"
+            ];
+
+            const rows = auditScheduleCache.map(r => [
+                r.month,
+                r.year,
+                r.monthInYear,
+                Math.round(r.wage),
+                Math.round(r.employerContrib),
+                Math.round(r.employeeContrib),
+                Math.round(r.totalContrib),
+                Math.round(r.balanceBefore),
+                Math.round(r.interest),
+                Math.round(r.balanceAfter)
+            ]);
+
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `BPJS_JHT_Audit_Schedule_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            syncYieldDisplay();
+            updateTotalRate();
+            calculateJHT();
+        });
+    </script>
+</body>
+</html>
